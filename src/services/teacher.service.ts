@@ -52,6 +52,6 @@ export class TeacherService {
       mentions
     );
 
-    return removeDuplicate(recipients.map((recipient) => recipient.email).concat(mentions));
+    return removeDuplicate(recipients.map((recipient) => recipient.email));
   }
 }
