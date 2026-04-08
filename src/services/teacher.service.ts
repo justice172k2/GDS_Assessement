@@ -41,6 +41,12 @@ export class TeacherService {
     notification: string
   ): Promise<string[]> {
     const mentions = removeDuplicate(extractMentionedEmails(notification));
+    const teacher = await this.teacherRepository.findByEmail(teacherEmail);
+
+    if (!teacher) {
+      throw new AppError(404, 'Teacher not found');
+    }
+
     const recipients = await this.studentRepository.getRecipientsForNotification(
       teacherEmail,
       mentions
