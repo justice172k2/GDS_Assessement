@@ -1,4 +1,4 @@
-import { DataSource, In } from 'typeorm';
+import { DataSource, EntityManager, In } from 'typeorm';
 import { Student } from '../entities/Student';
 import { Teacher } from '../entities/Teacher';
 import { IStudent, ITeacher } from '../types';
@@ -7,9 +7,9 @@ import { toBooleanFromDb } from '../utils/helpers';
 export class TeacherRepository {
   constructor(private dataSource: DataSource) {}
 
-  async upsert(email: string): Promise<void> {
-    await this.dataSource
-      .createQueryBuilder()
+  async upsert(email: string, manager?: EntityManager): Promise<void> {
+    const queryBuilder = (manager ?? this.dataSource.manager).createQueryBuilder();
+    await queryBuilder
       .insert()
       .into(Teacher)
       .values({ email })
@@ -18,8 +18,8 @@ export class TeacherRepository {
       .execute();
   }
 
-  async findByEmail(email: string): Promise<ITeacher | null> {
-    const repository = this.dataSource.getRepository(Teacher);
+  async findByEmail(email: string, manager?: EntityManager): Promise<ITeacher | null> {
+    const repository = (manager ?? this.dataSource.manager).getRepository(Teacher);
     const teacher = await repository.findOne({ where: { email } });
     return teacher ? this.toTeacher(teacher) : null;
   }
@@ -63,13 +63,17 @@ export class TeacherRepository {
     }));
   }
 
-  async linkStudents(teacherId: string, studentIds: string[]): Promise<void> {
+  async linkStudents(
+    teacherId: string,
+    studentIds: string[],
+    manager?: EntityManager
+  ): Promise<void> {
     if (studentIds.length === 0) {
       return;
     }
 
-    await this.dataSource
-      .createQueryBuilder()
+    const queryBuilder = (manager ?? this.dataSource.manager).createQueryBuilder();
+    await queryBuilder
       .insert()
       .into('registrations')
       .values(studentIds.map((studentId) => ({ teacher_id: teacherId, student_id: studentId })))

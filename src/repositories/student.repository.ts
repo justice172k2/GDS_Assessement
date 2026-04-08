@@ -1,4 +1,4 @@
-import { DataSource, In } from 'typeorm';
+import { DataSource, EntityManager, In } from 'typeorm';
 import { Student } from '../entities/Student';
 import { Teacher } from '../entities/Teacher';
 import { IStudent } from '../types';
@@ -26,13 +26,13 @@ export class StudentRepository {
     return this.toStudent(student);
   }
 
-  async upsertMany(emails: string[]): Promise<void> {
+  async upsertMany(emails: string[], manager?: EntityManager): Promise<void> {
     if (emails.length === 0) {
       return;
     }
 
-    await this.dataSource
-      .createQueryBuilder()
+    const queryBuilder = (manager ?? this.dataSource.manager).createQueryBuilder();
+    await queryBuilder
       .insert()
       .into(Student)
       .values(emails.map((email) => ({ email })))
@@ -41,8 +41,8 @@ export class StudentRepository {
       .execute();
   }
 
-  async findIdsByEmails(emails: string[]): Promise<string[]> {
-    const repository = this.dataSource.getRepository(Student);
+  async findIdsByEmails(emails: string[], manager?: EntityManager): Promise<string[]> {
+    const repository = (manager ?? this.dataSource.manager).getRepository(Student);
 
     if (emails.length === 0) {
       return [];

@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { StudentRepository } from '../repositories/student.repository';
 import { TeacherRepository } from '../repositories/teacher.repository';
 import { IStudent } from '../types';
@@ -6,19 +7,32 @@ import { extractMentionedEmails, removeDuplicate } from '../utils/helpers';
 
 export class TeacherService {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly teacherRepository: TeacherRepository,
     private readonly studentRepository: StudentRepository
   ) {}
 
   async register(teacherEmail: string, studentEmails: string[]): Promise<void> {
-    await this.teacherRepository.upsert(teacherEmail);
-    const uniqueStudentEmails = removeDuplicate(studentEmails);
-    await this.studentRepository.upsertMany(uniqueStudentEmails);
-    const teacher = await this.teacherRepository.findByEmail(teacherEmail);
-    if (!teacher) return;
-    const studentIds = await this.studentRepository.findIdsByEmails(uniqueStudentEmails);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    await this.teacherRepository.linkStudents(teacher.id, studentIds);
+    try {
+      const manager = queryRunner.manager;
+      await this.teacherRepository.upsert(teacherEmail, manager);
+      const uniqueStudentEmails = removeDuplicate(studentEmails);
+      await this.studentRepository.upsertMany(uniqueStudentEmails, manager);
+      const teacher = await this.teacherRepository.findByEmail(teacherEmail, manager);
+      if (!teacher) return;
+      const studentIds = await this.studentRepository.findIdsByEmails(uniqueStudentEmails, manager);
+      await this.teacherRepository.linkStudents(teacher.id, studentIds, manager);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getCommonStudents(teacherEmails: string[]): Promise<IStudent[]> {

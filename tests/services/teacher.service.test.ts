@@ -2,6 +2,7 @@ import { StudentRepository } from '../../src/repositories/student.repository';
 import { TeacherRepository } from '../../src/repositories/teacher.repository';
 import { TeacherService } from '../../src/services/teacher.service';
 import { IStudent } from '../../src/types';
+import { DataSource } from 'typeorm';
 
 jest.mock('../../src/repositories/teacher.repository');
 jest.mock('../../src/repositories/student.repository');
@@ -25,9 +26,22 @@ describe('TeacherService', () => {
     getRecipientsForNotification: jest.fn()
   } as unknown as jest.Mocked<StudentRepository>;
 
+  const queryRunnerMock = {
+    connect: jest.fn(),
+    startTransaction: jest.fn(),
+    commitTransaction: jest.fn(),
+    rollbackTransaction: jest.fn(),
+    release: jest.fn(),
+    manager: {}
+  };
+
+  const dataSourceMock = {
+    createQueryRunner: jest.fn(() => queryRunnerMock)
+  } as unknown as DataSource;
+
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new TeacherService(teacherRepositoryMock, studentRepositoryMock);
+    service = new TeacherService(dataSourceMock, teacherRepositoryMock, studentRepositoryMock);
   });
 
   describe('register', () => {
@@ -46,14 +60,30 @@ describe('TeacherService', () => {
 
       await service.register(teacherEmail, studentEmails);
 
-      expect(teacherRepositoryMock.upsert).toHaveBeenCalledWith(teacherEmail);
-      expect(teacherRepositoryMock.findByEmail).toHaveBeenCalledWith(teacherEmail);
-      expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith(studentEmails);
-      expect(studentRepositoryMock.findIdsByEmails).toHaveBeenCalledWith(studentEmails);
-      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith('teacher-id-1', [
-        'student-id-1',
-        'student-id-2'
-      ]);
+      expect(dataSourceMock.createQueryRunner).toHaveBeenCalledTimes(1);
+      expect(queryRunnerMock.connect).toHaveBeenCalledTimes(1);
+      expect(queryRunnerMock.startTransaction).toHaveBeenCalledTimes(1);
+      expect(teacherRepositoryMock.upsert).toHaveBeenCalledWith(teacherEmail, expect.anything());
+      expect(teacherRepositoryMock.findByEmail).toHaveBeenCalledWith(
+        teacherEmail,
+        expect.anything()
+      );
+      expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith(
+        studentEmails,
+        expect.anything()
+      );
+      expect(studentRepositoryMock.findIdsByEmails).toHaveBeenCalledWith(
+        studentEmails,
+        expect.anything()
+      );
+      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith(
+        'teacher-id-1',
+        ['student-id-1', 'student-id-2'],
+        expect.anything()
+      );
+      expect(queryRunnerMock.commitTransaction).toHaveBeenCalledTimes(1);
+      expect(queryRunnerMock.rollbackTransaction).not.toHaveBeenCalled();
+      expect(queryRunnerMock.release).toHaveBeenCalledTimes(1);
     });
 
     it('should handle duplicate student emails', async () => {
@@ -71,11 +101,22 @@ describe('TeacherService', () => {
 
       await service.register(teacherEmail, studentEmails);
 
-      expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith(['student1@example.com']);
-      expect(studentRepositoryMock.findIdsByEmails).toHaveBeenCalledWith(['student1@example.com']);
-      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith('teacher-id-1', [
-        'student-id-1'
-      ]);
+      expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith(
+        ['student1@example.com'],
+        expect.anything()
+      );
+      expect(studentRepositoryMock.findIdsByEmails).toHaveBeenCalledWith(
+        ['student1@example.com'],
+        expect.anything()
+      );
+      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith(
+        'teacher-id-1',
+        ['student-id-1'],
+        expect.anything()
+      );
+      expect(queryRunnerMock.commitTransaction).toHaveBeenCalledTimes(1);
+      expect(queryRunnerMock.rollbackTransaction).not.toHaveBeenCalled();
+      expect(queryRunnerMock.release).toHaveBeenCalledTimes(1);
     });
   });
 

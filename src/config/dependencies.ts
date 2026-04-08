@@ -6,6 +6,6 @@ import { dataSource } from './db';
 
 const teacherRepository = new TeacherRepository(dataSource);
 const studentRepository = new StudentRepository(dataSource);
-const teacherService = new TeacherService(teacherRepository, studentRepository);
+const teacherService = new TeacherService(dataSource, teacherRepository, studentRepository);
 
 export const teacherController = new TeacherController(teacherService);
