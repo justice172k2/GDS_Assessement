@@ -104,7 +104,11 @@ export class StudentRepository {
       )
       .groupBy('s.id');
 
-    const rows = await qb.getRawMany<{ id: string; email: string; suspended: boolean | number | string }>();
+    const rows = await qb.getRawMany<{
+      id: string;
+      email: string;
+      suspended: boolean | number | string;
+    }>();
 
     return rows.map((row) => ({
       id: row.id,

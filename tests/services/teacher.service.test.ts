@@ -1,7 +1,6 @@
 import { StudentRepository } from '../../src/repositories/student.repository';
 import { TeacherRepository } from '../../src/repositories/teacher.repository';
 import { IStudent, ITeacher } from '../../src/types';
-import { AppError } from '../../src/utils/errors';
 import { TeacherService } from '../../src/services/teacher.service';
 
 jest.mock('../../src/repositories/teacher.repository');
@@ -41,7 +40,10 @@ describe('TeacherService', () => {
       teacherRepositoryMock.upsert.mockResolvedValue(teacher);
       studentRepositoryMock.upsertMany.mockResolvedValue(students);
 
-      await service.register(teacher.email, students.map((student) => student.email));
+      await service.register(
+        teacher.email,
+        students.map((student) => student.email)
+      );
 
       expect(teacherRepositoryMock.upsert).toHaveBeenCalledWith(teacher.email);
       expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith([
@@ -56,7 +58,11 @@ describe('TeacherService', () => {
 
     it('is idempotent when called twice', async () => {
       const teacher: ITeacher = { id: 'teacher-id-1', email: 'teacher@test.com' };
-      const student: IStudent = { id: 'student-id-10', email: 'student@test.com', suspended: false };
+      const student: IStudent = {
+        id: 'student-id-10',
+        email: 'student@test.com',
+        suspended: false
+      };
 
       teacherRepositoryMock.upsert.mockResolvedValue(teacher);
       studentRepositoryMock.upsertMany.mockResolvedValue([student]);
@@ -66,8 +72,12 @@ describe('TeacherService', () => {
       await service.register(teacher.email, [student.email]);
 
       expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledTimes(2);
-      expect(teacherRepositoryMock.linkStudents).toHaveBeenNthCalledWith(1, teacher.id, [student.id]);
-      expect(teacherRepositoryMock.linkStudents).toHaveBeenNthCalledWith(2, teacher.id, [student.id]);
+      expect(teacherRepositoryMock.linkStudents).toHaveBeenNthCalledWith(1, teacher.id, [
+        student.id
+      ]);
+      expect(teacherRepositoryMock.linkStudents).toHaveBeenNthCalledWith(2, teacher.id, [
+        student.id
+      ]);
     });
   });
 
@@ -103,7 +113,11 @@ describe('TeacherService', () => {
 
   describe('suspendStudent', () => {
     it('suspends existing student', async () => {
-      const student: IStudent = { id: 'student-id-22', email: 'student@test.com', suspended: false };
+      const student: IStudent = {
+        id: 'student-id-22',
+        email: 'student@test.com',
+        suspended: false
+      };
       studentRepositoryMock.findByEmail.mockResolvedValue(student);
 
       await service.suspendStudent(student.email);
@@ -160,7 +174,10 @@ describe('TeacherService', () => {
         { id: 'student-id-1', email: 'registered@test.com', suspended: false }
       ]);
 
-      const result = await service.getRecipientsForNotification('teacher@test.com', 'General update');
+      const result = await service.getRecipientsForNotification(
+        'teacher@test.com',
+        'General update'
+      );
 
       expect(studentRepositoryMock.getRecipientsForNotification).toHaveBeenCalledWith(
         'teacher@test.com',

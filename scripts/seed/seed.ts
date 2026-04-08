@@ -49,16 +49,16 @@ const seed = async (): Promise<void> => {
         );
       }
 
-      const teacherRows = await manager.query(
+      const teacherRows = (await manager.query(
         `SELECT id, email FROM teachers WHERE email IN (${teachers.map(() => '?').join(',')})`,
         teachers
-      ) as Array<{ id: string; email: string }>;
+      )) as Array<{ id: string; email: string }>;
 
       const studentEmails = students.map((student) => student.email);
-      const studentRows = await manager.query(
+      const studentRows = (await manager.query(
         `SELECT id, email FROM students WHERE email IN (${studentEmails.map(() => '?').join(',')})`,
         studentEmails
-      ) as Array<{ id: string; email: string }>;
+      )) as Array<{ id: string; email: string }>;
 
       const teacherIdByEmail = new Map<string, string>();
       for (const row of teacherRows) {

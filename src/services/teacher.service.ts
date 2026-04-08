@@ -1,21 +1,20 @@
-import { StudentRepository } from "../repositories/student.repository";
-import { TeacherRepository } from "../repositories/teacher.repository";
-import { IStudent } from "../types";
-import { AppError } from "../utils/errors";
-import { extractMentionedEmails, removeDuplicate } from "../utils/helpers";
+import { StudentRepository } from '../repositories/student.repository';
+import { TeacherRepository } from '../repositories/teacher.repository';
+import { IStudent } from '../types';
+import { AppError } from '../utils/errors';
+import { extractMentionedEmails, removeDuplicate } from '../utils/helpers';
 
 export class TeacherService {
   constructor(
     private readonly teacherRepository: TeacherRepository,
-    private readonly studentRepository: StudentRepository,
+    private readonly studentRepository: StudentRepository
   ) {}
 
   async register(teacherEmail: string, studentEmails: string[]): Promise<void> {
     try {
       const teacher = await this.teacherRepository.upsert(teacherEmail);
       const uniqueStudentEmails = removeDuplicate(studentEmails);
-      const students =
-        await this.studentRepository.upsertMany(uniqueStudentEmails);
+      const students = await this.studentRepository.upsertMany(uniqueStudentEmails);
 
       const studentIds = students.map((student) => student.id);
       await this.teacherRepository.linkStudents(teacher.id, studentIds);
@@ -34,7 +33,7 @@ export class TeacherService {
     const student = await this.studentRepository.findByEmail(studentEmail);
 
     if (!student) {
-      throw new AppError(404, "Student not found");
+      throw new AppError(404, 'Student not found');
     }
 
     await this.studentRepository.suspend(student.id);
@@ -42,14 +41,13 @@ export class TeacherService {
 
   async getRecipientsForNotification(
     teacherEmail: string,
-    notification: string,
+    notification: string
   ): Promise<string[]> {
     const mentions = extractMentionedEmails(notification);
-    const recipients =
-      await this.studentRepository.getRecipientsForNotification(
-        teacherEmail,
-        mentions,
-      );
+    const recipients = await this.studentRepository.getRecipientsForNotification(
+      teacherEmail,
+      mentions
+    );
 
     return removeDuplicate(recipients.map((student) => student.email));
   }

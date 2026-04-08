@@ -57,26 +57,31 @@ PORT=3000
 ## Run Locally
 
 1. Start MySQL:
+
 ```bash
 docker compose up -d
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Run migrations:
+
 ```bash
 npm run migration:run
 ```
 
 4. (Optional) Seed sample data:
+
 ```bash
 npm run seed:run
 ```
 
 5. Start API:
+
 ```bash
 npm run dev
 ```
@@ -193,6 +198,7 @@ All errors return JSON:
 ```
 
 Examples:
+
 - `400` validation error
 - `404` student not found (suspend)
 - `500` unexpected error
