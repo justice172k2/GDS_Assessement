@@ -23,14 +23,9 @@
         },
         "url": {
           "raw": "Localhost:3000/api/retrievefornotifications",
-          "host": [
-            "Localhost"
-          ],
+          "host": ["Localhost"],
           "port": "3000",
-          "path": [
-            "api",
-            "retrievefornotifications"
-          ]
+          "path": ["api", "retrievefornotifications"]
         }
       },
       "response": []
@@ -61,14 +56,9 @@
         },
         "url": {
           "raw": "Localhost:3000/api/register",
-          "host": [
-            "Localhost"
-          ],
+          "host": ["Localhost"],
           "port": "3000",
-          "path": [
-            "api",
-            "register"
-          ]
+          "path": ["api", "register"]
         }
       },
       "response": []
@@ -137,14 +127,9 @@
         ],
         "url": {
           "raw": "Localhost:3000/api/commonstudents",
-          "host": [
-            "Localhost"
-          ],
+          "host": ["Localhost"],
           "port": "3000",
-          "path": [
-            "api",
-            "commonstudents"
-          ],
+          "path": ["api", "commonstudents"],
           "query": [
             {
               "key": "teacher",
@@ -188,14 +173,9 @@
         },
         "url": {
           "raw": "Localhost:3000/api/suspend",
-          "host": [
-            "Localhost"
-          ],
+          "host": ["Localhost"],
           "port": "3000",
-          "path": [
-            "api",
-            "suspend"
-          ]
+          "path": ["api", "suspend"]
         }
       },
       "response": []

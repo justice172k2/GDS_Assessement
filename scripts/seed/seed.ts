@@ -11,14 +11,19 @@ type RegistrationSeed = {
   studentEmail: string;
 };
 
-const teachers = ['teacher1@gmail.com', 'teacher2@gmail.com', 'teacher3@gmail.com', 'teacher4@gmail.com'];
+const teachers = [
+  'teacher1@gmail.com',
+  'teacher2@gmail.com',
+  'teacher3@gmail.com',
+  'teacher4@gmail.com'
+];
 
 const students: SeedStudent[] = [
-  { email: 'student1@gmail.com', suspended: false }, 
-  { email: 'student12@gmail.com', suspended: false }, 
-  { email: 'student13@gmail.com', suspended: false }, 
+  { email: 'student1@gmail.com', suspended: false },
+  { email: 'student12@gmail.com', suspended: false },
+  { email: 'student13@gmail.com', suspended: false },
   { email: 'student2@gmail.com', suspended: false },
-  { email: 'student23@gmail.com', suspended: false }, 
+  { email: 'student23@gmail.com', suspended: false },
   { email: 'student4@gmail.com', suspended: false }
 ];
 
@@ -27,7 +32,7 @@ const registrations: RegistrationSeed[] = [
   { teacherEmail: 'teacher1@gmail.com', studentEmail: 'student12@gmail.com' },
   { teacherEmail: 'teacher1@gmail.com', studentEmail: 'student13@gmail.com' },
   { teacherEmail: 'teacher2@gmail.com', studentEmail: 'student2@gmail.com' },
-  { teacherEmail: 'teacher2@gmail.com', studentEmail: 'student23@gmail.com' },
+  { teacherEmail: 'teacher2@gmail.com', studentEmail: 'student23@gmail.com' }
 ];
 
 const seed = async (): Promise<void> => {
