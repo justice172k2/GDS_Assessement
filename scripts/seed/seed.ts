@@ -11,23 +11,23 @@ type RegistrationSeed = {
   studentEmail: string;
 };
 
-const teachers = ['teacherken@gmail.com', 'teacherjoe@gmail.com'];
+const teachers = ['teacher1@gmail.com', 'teacher2@gmail.com', 'teacher3@gmail.com', 'teacher4@gmail.com'];
 
 const students: SeedStudent[] = [
-  { email: 'studentjon@gmail.com', suspended: false },
-  { email: 'studenthon@gmail.com', suspended: false },
-  { email: 'studentbob@gmail.com', suspended: false },
-  { email: 'studentagnes@gmail.com', suspended: false },
-  { email: 'studentmiche@gmail.com', suspended: false },
-  { email: 'studentmary@gmail.com', suspended: true }
+  { email: 'student1@gmail.com', suspended: false }, 
+  { email: 'student12@gmail.com', suspended: false }, 
+  { email: 'student13@gmail.com', suspended: false }, 
+  { email: 'student2@gmail.com', suspended: false },
+  { email: 'student23@gmail.com', suspended: false }, 
+  { email: 'student4@gmail.com', suspended: false }
 ];
 
 const registrations: RegistrationSeed[] = [
-  { teacherEmail: 'teacherken@gmail.com', studentEmail: 'studentjon@gmail.com' },
-  { teacherEmail: 'teacherken@gmail.com', studentEmail: 'studenthon@gmail.com' },
-  { teacherEmail: 'teacherken@gmail.com', studentEmail: 'studentbob@gmail.com' },
-  { teacherEmail: 'teacherjoe@gmail.com', studentEmail: 'studenthon@gmail.com' },
-  { teacherEmail: 'teacherjoe@gmail.com', studentEmail: 'studentagnes@gmail.com' }
+  { teacherEmail: 'teacher1@gmail.com', studentEmail: 'student1@gmail.com' },
+  { teacherEmail: 'teacher1@gmail.com', studentEmail: 'student12@gmail.com' },
+  { teacherEmail: 'teacher1@gmail.com', studentEmail: 'student13@gmail.com' },
+  { teacherEmail: 'teacher2@gmail.com', studentEmail: 'student2@gmail.com' },
+  { teacherEmail: 'teacher2@gmail.com', studentEmail: 'student23@gmail.com' },
 ];
 
 const seed = async (): Promise<void> => {
