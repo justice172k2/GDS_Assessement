@@ -156,6 +156,37 @@ describe('TeacherService', () => {
       );
     });
 
+    it('should deduplicate mentioned emails before calling repository', async () => {
+      const teacherEmail = 'teacher@example.com';
+      const notification = 'Hello @dup@example.com and @dup@example.com';
+
+      studentRepositoryMock.getRecipientsForNotification.mockResolvedValue([
+        { id: 'student-id-1', email: 'dup@example.com', suspended: false }
+      ]);
+
+      await service.getRecipientsForNotification(teacherEmail, notification);
+
+      expect(studentRepositoryMock.getRecipientsForNotification).toHaveBeenCalledWith(
+        teacherEmail,
+        ['dup@example.com']
+      );
+    });
+
+    it('should deduplicate recipients from repository result', async () => {
+      const teacherEmail = 'teacher@example.com';
+      const notification = 'Hello @mentioned@example.com';
+
+      studentRepositoryMock.getRecipientsForNotification.mockResolvedValue([
+        { id: 'student-id-1', email: 'registered@example.com', suspended: false },
+        { id: 'student-id-2', email: 'mentioned@example.com', suspended: false },
+        { id: 'student-id-3', email: 'registered@example.com', suspended: false }
+      ]);
+
+      const result = await service.getRecipientsForNotification(teacherEmail, notification);
+
+      expect(result).toEqual(['registered@example.com', 'mentioned@example.com']);
+    });
+
     it('should handle non-existent teacher with mentions', async () => {
       const teacherEmail = 'nonexistent@example.com';
       const notification = 'Hello @mentioned@example.com';

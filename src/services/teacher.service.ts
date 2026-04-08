@@ -17,6 +17,7 @@ export class TeacherService {
     const teacher = await this.teacherRepository.findByEmail(teacherEmail);
     if (!teacher) return;
     const studentIds = await this.studentRepository.findIdsByEmails(uniqueStudentEmails);
+
     await this.teacherRepository.linkStudents(teacher.id, studentIds);
   }
 
@@ -45,6 +46,6 @@ export class TeacherService {
       mentions
     );
 
-    return removeDuplicate(recipients.map((student) => student.email));
+    return removeDuplicate(recipients.map((recipient) => recipient.email).concat(mentions));
   }
 }
