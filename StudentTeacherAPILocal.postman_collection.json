@@ -8,29 +8,6 @@
   },
   "item": [
     {
-      "name": "retrievefornotifications",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"teacher\":  \"teacher2@gmail.com\",\n  \"notification\": \"Hello students! @student23@gmail.com @studentmiche@gmail.com\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "Localhost:3000/api/retrievefornotifications",
-          "host": ["Localhost"],
-          "port": "3000",
-          "path": ["api", "retrievefornotifications"]
-        }
-      },
-      "response": []
-    },
-    {
       "name": "register",
       "request": {
         "auth": {
@@ -56,9 +33,14 @@
         },
         "url": {
           "raw": "Localhost:3000/api/register",
-          "host": ["Localhost"],
+          "host": [
+            "Localhost"
+          ],
           "port": "3000",
-          "path": ["api", "register"]
+          "path": [
+            "api",
+            "register"
+          ]
         }
       },
       "response": []
@@ -127,9 +109,14 @@
         ],
         "url": {
           "raw": "Localhost:3000/api/commonstudents",
-          "host": ["Localhost"],
+          "host": [
+            "Localhost"
+          ],
           "port": "3000",
-          "path": ["api", "commonstudents"],
+          "path": [
+            "api",
+            "commonstudents"
+          ],
           "query": [
             {
               "key": "teacher",
@@ -148,7 +135,7 @@
       "response": []
     },
     {
-      "name": "updateTask",
+      "name": "suspend",
       "request": {
         "auth": {
           "type": "bearer",
@@ -173,9 +160,42 @@
         },
         "url": {
           "raw": "Localhost:3000/api/suspend",
-          "host": ["Localhost"],
+          "host": [
+            "Localhost"
+          ],
           "port": "3000",
-          "path": ["api", "suspend"]
+          "path": [
+            "api",
+            "suspend"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "retrievefornotifications",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"teacher\":  \"teacher2@gmail.com\",\n  \"notification\": \"Hello students! @student23@gmail.com @studentmiche@gmail.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "Localhost:3000/api/retrievefornotifications",
+          "host": [
+            "Localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "retrievefornotifications"
+          ]
         }
       },
       "response": []
