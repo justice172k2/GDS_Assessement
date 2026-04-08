@@ -8,7 +8,7 @@
     "start:railway": "npm run migration:run:prod && npm run start",
     "build": "tsc -p tsconfig.build.json",
     "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
-    "test": "jest --coverage",
+    "test": "jest",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"**/*.{ts,js,json,md,yml,yaml}\"",

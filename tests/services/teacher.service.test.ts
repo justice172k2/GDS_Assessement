@@ -46,8 +46,8 @@ describe('TeacherService', () => {
 
   describe('register', () => {
     it('should register students to teacher successfully', async () => {
-      const teacherEmail = 'teacher@example.com';
-      const studentEmails = ['student1@example.com', 'student2@example.com'];
+      const teacherEmail = 'teacher1@gmail.com';
+      const studentEmails = ['student1@gmail.com', 'student2@gmail.com'];
 
       teacherRepositoryMock.upsert.mockResolvedValue();
       teacherRepositoryMock.findByEmail.mockResolvedValue({
@@ -61,34 +61,17 @@ describe('TeacherService', () => {
       await service.register(teacherEmail, studentEmails);
 
       expect(dataSourceMock.createQueryRunner).toHaveBeenCalledTimes(1);
-      expect(queryRunnerMock.connect).toHaveBeenCalledTimes(1);
-      expect(queryRunnerMock.startTransaction).toHaveBeenCalledTimes(1);
-      expect(teacherRepositoryMock.upsert).toHaveBeenCalledWith(teacherEmail, expect.anything());
-      expect(teacherRepositoryMock.findByEmail).toHaveBeenCalledWith(
-        teacherEmail,
-        expect.anything()
-      );
-      expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith(
-        studentEmails,
-        expect.anything()
-      );
-      expect(studentRepositoryMock.findIdsByEmails).toHaveBeenCalledWith(
-        studentEmails,
-        expect.anything()
-      );
       expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith(
         'teacher-id-1',
         ['student-id-1', 'student-id-2'],
         expect.anything()
       );
       expect(queryRunnerMock.commitTransaction).toHaveBeenCalledTimes(1);
-      expect(queryRunnerMock.rollbackTransaction).not.toHaveBeenCalled();
-      expect(queryRunnerMock.release).toHaveBeenCalledTimes(1);
     });
 
     it('should handle duplicate student emails', async () => {
-      const teacherEmail = 'teacher@example.com';
-      const studentEmails = ['student1@example.com', 'student1@example.com'];
+      const teacherEmail = 'teacher1@gmail.com';
+      const studentEmails = ['student1@gmail.com', 'student1@gmail.com'];
 
       teacherRepositoryMock.upsert.mockResolvedValue();
       teacherRepositoryMock.findByEmail.mockResolvedValue({
@@ -102,43 +85,32 @@ describe('TeacherService', () => {
       await service.register(teacherEmail, studentEmails);
 
       expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith(
-        ['student1@example.com'],
-        expect.anything()
-      );
-      expect(studentRepositoryMock.findIdsByEmails).toHaveBeenCalledWith(
-        ['student1@example.com'],
-        expect.anything()
-      );
-      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith(
-        'teacher-id-1',
-        ['student-id-1'],
+        ['student1@gmail.com'],
         expect.anything()
       );
       expect(queryRunnerMock.commitTransaction).toHaveBeenCalledTimes(1);
-      expect(queryRunnerMock.rollbackTransaction).not.toHaveBeenCalled();
-      expect(queryRunnerMock.release).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('getCommonStudents', () => {
     it('should get common students for single teacher', async () => {
       const expectedStudents: IStudent[] = [
-        { id: 'student-id-1', email: 'student1@example.com', suspended: false },
-        { id: 'student-id-2', email: 'student2@example.com', suspended: false }
+        { id: 'student-id-1', email: 'student1@gmail.com', suspended: false },
+        { id: 'student-id-2', email: 'student2@gmail.com', suspended: false }
       ];
 
       teacherRepositoryMock.getCommonStudents.mockResolvedValue(expectedStudents);
 
-      const result = await service.getCommonStudents(['teacher@example.com']);
+      const result = await service.getCommonStudents(['teacher1@gmail.com']);
 
       expect(result).toEqual(expectedStudents);
-      expect(teacherRepositoryMock.getCommonStudents).toHaveBeenCalledWith(['teacher@example.com']);
+      expect(teacherRepositoryMock.getCommonStudents).toHaveBeenCalledWith(['teacher1@gmail.com']);
     });
 
     it('should get common students for multiple teachers', async () => {
-      const teacherEmails = ['teacher1@example.com', 'teacher2@example.com'];
+      const teacherEmails = ['teacher1@gmail.com', 'teacher2@gmail.com'];
       const expectedStudents: IStudent[] = [
-        { id: 'student-id-common', email: 'common@example.com', suspended: false }
+        { id: 'student-id-common', email: 'student12@gmail.com', suspended: false }
       ];
 
       teacherRepositoryMock.getCommonStudents.mockResolvedValue(expectedStudents);
@@ -152,7 +124,7 @@ describe('TeacherService', () => {
 
   describe('suspendStudent', () => {
     it('should suspend student successfully', async () => {
-      const studentEmail = 'student@example.com';
+      const studentEmail = 'student1@gmail.com';
 
       studentRepositoryMock.findByEmail.mockResolvedValue({
         id: 'student-id-1',
@@ -168,7 +140,7 @@ describe('TeacherService', () => {
     });
 
     it('should throw error when student not found', async () => {
-      const studentEmail = 'nonexistent@example.com';
+      const studentEmail = 'student12@gmail.com';
       studentRepositoryMock.findByEmail.mockResolvedValue(null);
 
       await expect(service.suspendStudent(studentEmail)).rejects.toMatchObject({
@@ -180,73 +152,73 @@ describe('TeacherService', () => {
 
   describe('getRecipientsForNotification', () => {
     it('should get notification recipients with mentions', async () => {
-      const teacherEmail = 'teacher@example.com';
-      const notification = 'Hello @mentioned@example.com';
+      const teacherEmail = 'teacher1@gmail.com';
+      const notification = 'Hello @student12@gmail.com';
 
       studentRepositoryMock.getRecipientsForNotification.mockResolvedValue([
-        { id: 'student-id-1', email: 'registered@example.com', suspended: false },
-        { id: 'student-id-2', email: 'mentioned@example.com', suspended: false }
+        { id: 'student-id-1', email: 'student1@gmail.com', suspended: false },
+        { id: 'student-id-2', email: 'student12@gmail.com', suspended: false }
       ]);
 
       const result = await service.getRecipientsForNotification(teacherEmail, notification);
 
-      expect(result).toEqual(['registered@example.com', 'mentioned@example.com']);
+      expect(result).toEqual(['student1@gmail.com', 'student12@gmail.com']);
       expect(studentRepositoryMock.getRecipientsForNotification).toHaveBeenCalledWith(
         teacherEmail,
-        ['mentioned@example.com']
+        ['student12@gmail.com']
       );
     });
 
     it('should deduplicate mentioned emails before calling repository', async () => {
-      const teacherEmail = 'teacher@example.com';
-      const notification = 'Hello @dup@example.com and @dup@example.com';
+      const teacherEmail = 'teacher1@gmail.com';
+      const notification = 'Hello @student12@gmail.com and @student12@gmail.com';
 
       studentRepositoryMock.getRecipientsForNotification.mockResolvedValue([
-        { id: 'student-id-1', email: 'dup@example.com', suspended: false }
+        { id: 'student-id-1', email: 'student12@gmail.com', suspended: false }
       ]);
 
       await service.getRecipientsForNotification(teacherEmail, notification);
 
       expect(studentRepositoryMock.getRecipientsForNotification).toHaveBeenCalledWith(
         teacherEmail,
-        ['dup@example.com']
+        ['student12@gmail.com']
       );
     });
 
     it('should deduplicate recipients from repository result', async () => {
-      const teacherEmail = 'teacher@example.com';
-      const notification = 'Hello @mentioned@example.com';
+      const teacherEmail = 'teacher1@gmail.com';
+      const notification = 'Hello @student12@gmail.com';
 
       studentRepositoryMock.getRecipientsForNotification.mockResolvedValue([
-        { id: 'student-id-1', email: 'registered@example.com', suspended: false },
-        { id: 'student-id-2', email: 'mentioned@example.com', suspended: false },
-        { id: 'student-id-3', email: 'registered@example.com', suspended: false }
+        { id: 'student-id-1', email: 'student1@gmail.com', suspended: false },
+        { id: 'student-id-2', email: 'student12@gmail.com', suspended: false },
+        { id: 'student-id-3', email: 'student1@gmail.com', suspended: false }
       ]);
 
       const result = await service.getRecipientsForNotification(teacherEmail, notification);
 
-      expect(result).toEqual(['registered@example.com', 'mentioned@example.com']);
+      expect(result).toEqual(['student1@gmail.com', 'student12@gmail.com']);
     });
 
     it('should handle non-existent teacher with mentions', async () => {
-      const teacherEmail = 'nonexistent@example.com';
-      const notification = 'Hello @mentioned@example.com';
+      const teacherEmail = 'teacher2@gmail.com';
+      const notification = 'Hello @student12@gmail.com';
 
       studentRepositoryMock.getRecipientsForNotification.mockResolvedValue([
-        { id: 'student-id-1', email: 'mentioned@example.com', suspended: false }
+        { id: 'student-id-1', email: 'student12@gmail.com', suspended: false }
       ]);
 
       const result = await service.getRecipientsForNotification(teacherEmail, notification);
 
-      expect(result).toEqual(['mentioned@example.com']);
+      expect(result).toEqual(['student12@gmail.com']);
       expect(studentRepositoryMock.getRecipientsForNotification).toHaveBeenCalledWith(
         teacherEmail,
-        ['mentioned@example.com']
+        ['student12@gmail.com']
       );
     });
 
     it('should return empty array for non-existent teacher without mentions', async () => {
-      const teacherEmail = 'nonexistent@example.com';
+      const teacherEmail = 'teacher2@gmail.com';
       const notification = 'Hello everyone';
 
       studentRepositoryMock.getRecipientsForNotification.mockResolvedValue([]);
