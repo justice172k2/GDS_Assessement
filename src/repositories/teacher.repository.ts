@@ -2,13 +2,12 @@ import { DataSource, In } from 'typeorm';
 import { Student } from '../entities/Student';
 import { Teacher } from '../entities/Teacher';
 import { IStudent, ITeacher } from '../types';
-import { removeDuplicate, toBooleanFromDb } from '../utils/helpers';
+import { toBooleanFromDb } from '../utils/helpers';
 
 export class TeacherRepository {
   constructor(private dataSource: DataSource) {}
 
-  async upsert(email: string): Promise<ITeacher> {
-    const repository = this.dataSource.getRepository(Teacher);
+  async upsert(email: string): Promise<void> {
     await this.dataSource
       .createQueryBuilder()
       .insert()
@@ -17,13 +16,6 @@ export class TeacherRepository {
       .orIgnore()
       .updateEntity(false)
       .execute();
-
-    const teacher = await repository.findOne({ where: { email } });
-    if (!teacher) {
-      throw new Error(`Failed to upsert teacher with email: ${email}`);
-    }
-
-    return this.toTeacher(teacher);
   }
 
   async findByEmail(email: string): Promise<ITeacher | null> {
@@ -33,9 +25,7 @@ export class TeacherRepository {
   }
 
   async getCommonStudents(teacherEmails: string[]): Promise<IStudent[]> {
-    const uniqueTeacherEmails = removeDuplicate(teacherEmails);
-
-    if (uniqueTeacherEmails.length === 0) {
+    if (teacherEmails.length === 0) {
       return [];
     }
 
@@ -44,11 +34,11 @@ export class TeacherRepository {
         id: true
       },
       where: {
-        email: In(uniqueTeacherEmails)
+        email: In(teacherEmails)
       }
     });
 
-    if (teacherRows.length !== uniqueTeacherEmails.length) {
+    if (teacherRows.length !== teacherEmails.length) {
       return [];
     }
 

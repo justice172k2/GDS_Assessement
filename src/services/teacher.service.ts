@@ -11,17 +11,13 @@ export class TeacherService {
   ) {}
 
   async register(teacherEmail: string, studentEmails: string[]): Promise<void> {
-    try {
-      const teacher = await this.teacherRepository.upsert(teacherEmail);
-      const uniqueStudentEmails = removeDuplicate(studentEmails);
-      const students = await this.studentRepository.upsertMany(uniqueStudentEmails);
-
-      const studentIds = students.map((student) => student.id);
-      await this.teacherRepository.linkStudents(teacher.id, studentIds);
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+    await this.teacherRepository.upsert(teacherEmail);
+    const uniqueStudentEmails = removeDuplicate(studentEmails);
+    await this.studentRepository.upsertMany(uniqueStudentEmails);
+    const teacher = await this.teacherRepository.findByEmail(teacherEmail);
+    if (!teacher) return;
+    const studentIds = await this.studentRepository.findIdsByEmails(uniqueStudentEmails);
+    await this.teacherRepository.linkStudents(teacher.id, studentIds);
   }
 
   async getCommonStudents(teacherEmails: string[]): Promise<IStudent[]> {
@@ -43,7 +39,7 @@ export class TeacherService {
     teacherEmail: string,
     notification: string
   ): Promise<string[]> {
-    const mentions = extractMentionedEmails(notification);
+    const mentions = removeDuplicate(extractMentionedEmails(notification));
     const recipients = await this.studentRepository.getRecipientsForNotification(
       teacherEmail,
       mentions

@@ -10,8 +10,9 @@
     "skipLibCheck": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "types": ["node", "jest"]
   },
-  "include": ["src", "scripts", "migrations", "src/types", "src/utils", "tests"],
-  "exclude": ["node_modules", "dist", "tests"]
+  "include": ["src", "scripts", "migrations", "tests"],
+  "exclude": ["node_modules", "dist"]
 }

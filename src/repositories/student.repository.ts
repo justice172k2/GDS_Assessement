@@ -2,7 +2,7 @@ import { DataSource, In } from 'typeorm';
 import { Student } from '../entities/Student';
 import { Teacher } from '../entities/Teacher';
 import { IStudent } from '../types';
-import { removeDuplicate, toBooleanFromDb } from '../utils/helpers';
+import { toBooleanFromDb } from '../utils/helpers';
 
 export class StudentRepository {
   constructor(private dataSource: DataSource) {}
@@ -26,41 +26,38 @@ export class StudentRepository {
     return this.toStudent(student);
   }
 
-  async upsertMany(emails: string[]): Promise<IStudent[]> {
-    const repository = this.dataSource.getRepository(Student);
-    const uniqueEmails = removeDuplicate(emails);
-
-    if (uniqueEmails.length === 0) {
-      return [];
+  async upsertMany(emails: string[]): Promise<void> {
+    if (emails.length === 0) {
+      return;
     }
 
     await this.dataSource
       .createQueryBuilder()
       .insert()
       .into(Student)
-      .values(uniqueEmails.map((email) => ({ email })))
+      .values(emails.map((email) => ({ email })))
       .orIgnore()
       .updateEntity(false)
       .execute();
+  }
 
-    const students = await repository.find({
-      where: {
-        email: In(uniqueEmails)
-      }
-    });
+  async findIdsByEmails(emails: string[]): Promise<string[]> {
+    const repository = this.dataSource.getRepository(Student);
 
-    const studentByEmail = new Map<string, Student>();
-    for (const student of students) {
-      studentByEmail.set(student.email, student);
+    if (emails.length === 0) {
+      return [];
     }
 
-    return uniqueEmails.map((email) => {
-      const student = studentByEmail.get(email);
-      if (!student) {
-        throw new Error(`Failed to upsert student with email: ${email}`);
+    const students = await repository.find({
+      select: {
+        id: true
+      },
+      where: {
+        email: In(emails)
       }
-      return this.toStudent(student);
     });
+
+    return students.map((student) => student.id);
   }
 
   async findByEmail(email: string): Promise<IStudent | null> {
@@ -82,8 +79,6 @@ export class StudentRepository {
     teacherEmail: string,
     mentionedEmails: string[]
   ): Promise<IStudent[]> {
-    const normalizedMentionedEmails = removeDuplicate(mentionedEmails);
-
     const qb = this.dataSource
       .createQueryBuilder()
       .select('s.id', 'id')
@@ -94,12 +89,12 @@ export class StudentRepository {
       .leftJoin(Teacher, 't', 't.id = r.teacher_id')
       .where('s.suspended = false')
       .andWhere(
-        normalizedMentionedEmails.length > 0
+        mentionedEmails.length > 0
           ? '(t.email = :teacherEmail OR s.email IN (:...mentionedEmails))'
           : 't.email = :teacherEmail',
         {
           teacherEmail,
-          mentionedEmails: normalizedMentionedEmails
+          mentionedEmails
         }
       )
       .groupBy('s.id');

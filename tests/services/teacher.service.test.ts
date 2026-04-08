@@ -19,6 +19,7 @@ describe('TeacherService', () => {
   const studentRepositoryMock: jest.Mocked<StudentRepository> = {
     upsert: jest.fn(),
     upsertMany: jest.fn(),
+    findIdsByEmails: jest.fn(),
     findByEmail: jest.fn(),
     suspend: jest.fn(),
     getRecipientsForNotification: jest.fn()
@@ -36,9 +37,12 @@ describe('TeacherService', () => {
         { id: 'student-id-10', email: 'student1@test.com', suspended: false },
         { id: 'student-id-11', email: 'student2@test.com', suspended: false }
       ];
+      const studentIds = students.map((student) => student.id);
 
-      teacherRepositoryMock.upsert.mockResolvedValue(teacher);
-      studentRepositoryMock.upsertMany.mockResolvedValue(students);
+      teacherRepositoryMock.upsert.mockResolvedValue();
+      teacherRepositoryMock.findByEmail.mockResolvedValue(teacher);
+      studentRepositoryMock.upsertMany.mockResolvedValue();
+      studentRepositoryMock.findIdsByEmails.mockResolvedValue(studentIds);
 
       await service.register(
         teacher.email,
@@ -46,14 +50,16 @@ describe('TeacherService', () => {
       );
 
       expect(teacherRepositoryMock.upsert).toHaveBeenCalledWith(teacher.email);
+      expect(teacherRepositoryMock.findByEmail).toHaveBeenCalledWith(teacher.email);
       expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith([
         'student1@test.com',
         'student2@test.com'
       ]);
-      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith(teacher.id, [
-        'student-id-10',
-        'student-id-11'
+      expect(studentRepositoryMock.findIdsByEmails).toHaveBeenCalledWith([
+        'student1@test.com',
+        'student2@test.com'
       ]);
+      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith(teacher.id, studentIds);
     });
 
     it('is idempotent when called twice', async () => {
@@ -64,8 +70,10 @@ describe('TeacherService', () => {
         suspended: false
       };
 
-      teacherRepositoryMock.upsert.mockResolvedValue(teacher);
-      studentRepositoryMock.upsertMany.mockResolvedValue([student]);
+      teacherRepositoryMock.upsert.mockResolvedValue();
+      teacherRepositoryMock.findByEmail.mockResolvedValue(teacher);
+      studentRepositoryMock.upsertMany.mockResolvedValue();
+      studentRepositoryMock.findIdsByEmails.mockResolvedValue([student.id]);
       teacherRepositoryMock.linkStudents.mockResolvedValue();
 
       await service.register(teacher.email, [student.email]);
