@@ -5,6 +5,7 @@
   "main": "dist/src/server.js",
   "scripts": {
     "start": "node dist/src/server.js",
+    "start:railway": "npm run migration:run:prod && npm run start",
     "build": "tsc -p tsconfig.build.json",
     "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
     "test": "jest --coverage",
@@ -13,9 +14,11 @@
     "format": "prettier --write \"**/*.{ts,js,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md,yml,yaml}\"",
     "typeorm": "typeorm-ts-node-commonjs -d src/config/db.ts",
+    "typeorm:prod": "typeorm -d dist/src/config/db.js",
     "migration:create": "npm run typeorm -- migration:create",
     "migration:generate": "npm run typeorm -- migration:generate",
     "migration:run": "npm run typeorm -- migration:run",
+    "migration:run:prod": "npm run typeorm:prod -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
     "seed:run": "npm run build && node dist/scripts/seed/seed.js"
   },
