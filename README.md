@@ -2,6 +2,11 @@
 
 REST API for teacher-student administration using Node.js, TypeScript, Express, TypeORM, MySQL, Zod, and Jest.
 
+## Hosted API
+
+- Base URL: `https://gdsassessement-production.up.railway.app/`
+- Health check: `GET https://gdsassessement-production.up.railway.app/health`
+
 ## Tech Stack
 
 - Node.js + TypeScript (strict mode)
@@ -56,10 +61,10 @@ PORT=3000
 
 ## Run Locally
 
-1. Start MySQL only:
+1. Start MySQL only (dev database in Docker):
 
 ```bash
-docker compose up -d
+docker compose -f docker-compose.dev.yml up -d
 ```
 
 2. Install dependencies:
@@ -87,10 +92,11 @@ npm run dev
 ```
 
 Base URL: `http://localhost:3000`
+Health check: `GET http://localhost:3000/health`
 
 ## Run With Docker (App + MySQL)
 
-Use full stack compose file:
+Use full stack compose file (`app` + `mysql`):
 
 ```bash
 docker compose -f docker-compose.yml up --build
