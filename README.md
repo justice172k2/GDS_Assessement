@@ -9,7 +9,7 @@ REST API for teacher-student administration using Node.js, TypeScript, Express, 
 - MySQL 8 + TypeORM (`mysql2`)
 - Zod (request validation)
 - Jest + ts-jest (unit tests)
-- Docker Compose (local MySQL)
+- Docker Compose (local MySQL / full stack)
 
 ## Project Structure
 
@@ -56,7 +56,7 @@ PORT=3000
 
 ## Run Locally
 
-1. Start MySQL:
+1. Start MySQL only:
 
 ```bash
 docker compose up -d
@@ -80,7 +80,7 @@ npm run migration:run
 npm run seed:run
 ```
 
-5. Start API:
+5. Start API (hot-reload):
 
 ```bash
 npm run dev
@@ -88,12 +88,35 @@ npm run dev
 
 Base URL: `http://localhost:3000`
 
+## Run With Docker (App + MySQL)
+
+Use full stack compose file:
+
+```bash
+docker compose -f docker-compose.yml up --build
+```
+
+Run in background:
+
+```bash
+docker compose -f docker-compose.yml up -d --build
+```
+
+Stop:
+
+```bash
+docker compose -f docker-compose.yml down
+```
+
 ## Scripts
 
 ```bash
 npm run build
 npm start
 npm test
+npm run dev
+npm run lint
+npm run format:check
 ```
 
 ## Migration Commands (TypeORM CLI)
