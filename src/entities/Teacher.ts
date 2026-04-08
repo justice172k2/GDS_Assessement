@@ -16,4 +16,10 @@ export class Teacher {
     inverseJoinColumn: { name: 'student_id', referencedColumnName: 'id' }
   })
   students: Student[];
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
 }
