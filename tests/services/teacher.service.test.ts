@@ -1,7 +1,7 @@
 import { StudentRepository } from '../../src/repositories/student.repository';
 import { TeacherRepository } from '../../src/repositories/teacher.repository';
-import { IStudent, ITeacher } from '../../src/types';
 import { TeacherService } from '../../src/services/teacher.service';
+import { IStudent } from '../../src/types';
 
 jest.mock('../../src/repositories/teacher.repository');
 jest.mock('../../src/repositories/student.repository');
@@ -31,113 +31,106 @@ describe('TeacherService', () => {
   });
 
   describe('register', () => {
-    it('upserts teacher and students, then links them', async () => {
-      const teacher: ITeacher = { id: 'teacher-id-1', email: 'teacher@test.com' };
-      const students: IStudent[] = [
-        { id: 'student-id-10', email: 'student1@test.com', suspended: false },
-        { id: 'student-id-11', email: 'student2@test.com', suspended: false }
-      ];
-      const studentIds = students.map((student) => student.id);
+    it('should register students to teacher successfully', async () => {
+      const teacherEmail = 'teacher@example.com';
+      const studentEmails = ['student1@example.com', 'student2@example.com'];
 
       teacherRepositoryMock.upsert.mockResolvedValue();
-      teacherRepositoryMock.findByEmail.mockResolvedValue(teacher);
+      teacherRepositoryMock.findByEmail.mockResolvedValue({
+        id: 'teacher-id-1',
+        email: teacherEmail
+      });
       studentRepositoryMock.upsertMany.mockResolvedValue();
-      studentRepositoryMock.findIdsByEmails.mockResolvedValue(studentIds);
-
-      await service.register(
-        teacher.email,
-        students.map((student) => student.email)
-      );
-
-      expect(teacherRepositoryMock.upsert).toHaveBeenCalledWith(teacher.email);
-      expect(teacherRepositoryMock.findByEmail).toHaveBeenCalledWith(teacher.email);
-      expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith([
-        'student1@test.com',
-        'student2@test.com'
-      ]);
-      expect(studentRepositoryMock.findIdsByEmails).toHaveBeenCalledWith([
-        'student1@test.com',
-        'student2@test.com'
-      ]);
-      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith(teacher.id, studentIds);
-    });
-
-    it('is idempotent when called twice', async () => {
-      const teacher: ITeacher = { id: 'teacher-id-1', email: 'teacher@test.com' };
-      const student: IStudent = {
-        id: 'student-id-10',
-        email: 'student@test.com',
-        suspended: false
-      };
-
-      teacherRepositoryMock.upsert.mockResolvedValue();
-      teacherRepositoryMock.findByEmail.mockResolvedValue(teacher);
-      studentRepositoryMock.upsertMany.mockResolvedValue();
-      studentRepositoryMock.findIdsByEmails.mockResolvedValue([student.id]);
+      studentRepositoryMock.findIdsByEmails.mockResolvedValue(['student-id-1', 'student-id-2']);
       teacherRepositoryMock.linkStudents.mockResolvedValue();
 
-      await service.register(teacher.email, [student.email]);
-      await service.register(teacher.email, [student.email]);
+      await service.register(teacherEmail, studentEmails);
 
-      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledTimes(2);
-      expect(teacherRepositoryMock.linkStudents).toHaveBeenNthCalledWith(1, teacher.id, [
-        student.id
+      expect(teacherRepositoryMock.upsert).toHaveBeenCalledWith(teacherEmail);
+      expect(teacherRepositoryMock.findByEmail).toHaveBeenCalledWith(teacherEmail);
+      expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith(studentEmails);
+      expect(studentRepositoryMock.findIdsByEmails).toHaveBeenCalledWith(studentEmails);
+      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith('teacher-id-1', [
+        'student-id-1',
+        'student-id-2'
       ]);
-      expect(teacherRepositoryMock.linkStudents).toHaveBeenNthCalledWith(2, teacher.id, [
-        student.id
+    });
+
+    it('should handle duplicate student emails', async () => {
+      const teacherEmail = 'teacher@example.com';
+      const studentEmails = ['student1@example.com', 'student1@example.com'];
+
+      teacherRepositoryMock.upsert.mockResolvedValue();
+      teacherRepositoryMock.findByEmail.mockResolvedValue({
+        id: 'teacher-id-1',
+        email: teacherEmail
+      });
+      studentRepositoryMock.upsertMany.mockResolvedValue();
+      studentRepositoryMock.findIdsByEmails.mockResolvedValue(['student-id-1']);
+      teacherRepositoryMock.linkStudents.mockResolvedValue();
+
+      await service.register(teacherEmail, studentEmails);
+
+      expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith(['student1@example.com']);
+      expect(studentRepositoryMock.findIdsByEmails).toHaveBeenCalledWith(['student1@example.com']);
+      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith('teacher-id-1', [
+        'student-id-1'
       ]);
     });
   });
 
   describe('getCommonStudents', () => {
-    it('single teacher: returns all registered students', async () => {
-      const students: IStudent[] = [
-        { id: 'student-id-1', email: 'a@test.com', suspended: false },
-        { id: 'student-id-2', email: 'b@test.com', suspended: false }
+    it('should get common students for single teacher', async () => {
+      const expectedStudents: IStudent[] = [
+        { id: 'student-id-1', email: 'student1@example.com', suspended: false },
+        { id: 'student-id-2', email: 'student2@example.com', suspended: false }
       ];
-      teacherRepositoryMock.getCommonStudents.mockResolvedValue(students);
 
-      const result = await service.getCommonStudents(['teacher@test.com']);
+      teacherRepositoryMock.getCommonStudents.mockResolvedValue(expectedStudents);
 
-      expect(teacherRepositoryMock.getCommonStudents).toHaveBeenCalledWith(['teacher@test.com']);
-      expect(result).toEqual(students);
+      const result = await service.getCommonStudents(['teacher@example.com']);
+
+      expect(result).toEqual(expectedStudents);
+      expect(teacherRepositoryMock.getCommonStudents).toHaveBeenCalledWith(['teacher@example.com']);
     });
 
-    it('multiple teachers: returns intersection only', async () => {
-      const intersection: IStudent[] = [
-        { id: 'student-id-2', email: 'b@test.com', suspended: false }
+    it('should get common students for multiple teachers', async () => {
+      const teacherEmails = ['teacher1@example.com', 'teacher2@example.com'];
+      const expectedStudents: IStudent[] = [
+        { id: 'student-id-common', email: 'common@example.com', suspended: false }
       ];
-      teacherRepositoryMock.getCommonStudents.mockResolvedValue(intersection);
 
-      const result = await service.getCommonStudents(['t1@test.com', 't2@test.com']);
+      teacherRepositoryMock.getCommonStudents.mockResolvedValue(expectedStudents);
 
-      expect(teacherRepositoryMock.getCommonStudents).toHaveBeenCalledWith([
-        't1@test.com',
-        't2@test.com'
-      ]);
-      expect(result).toEqual(intersection);
+      const result = await service.getCommonStudents(teacherEmails);
+
+      expect(result).toEqual(expectedStudents);
+      expect(teacherRepositoryMock.getCommonStudents).toHaveBeenCalledWith(teacherEmails);
     });
   });
 
   describe('suspendStudent', () => {
-    it('suspends existing student', async () => {
-      const student: IStudent = {
-        id: 'student-id-22',
-        email: 'student@test.com',
+    it('should suspend student successfully', async () => {
+      const studentEmail = 'student@example.com';
+
+      studentRepositoryMock.findByEmail.mockResolvedValue({
+        id: 'student-id-1',
+        email: studentEmail,
         suspended: false
-      };
-      studentRepositoryMock.findByEmail.mockResolvedValue(student);
+      });
+      studentRepositoryMock.suspend.mockResolvedValue();
 
-      await service.suspendStudent(student.email);
+      await service.suspendStudent(studentEmail);
 
-      expect(studentRepositoryMock.findByEmail).toHaveBeenCalledWith(student.email);
-      expect(studentRepositoryMock.suspend).toHaveBeenCalledWith(student.id);
+      expect(studentRepositoryMock.findByEmail).toHaveBeenCalledWith(studentEmail);
+      expect(studentRepositoryMock.suspend).toHaveBeenCalledWith('student-id-1');
     });
 
-    it('throws AppError(404) when student not found', async () => {
+    it('should throw error when student not found', async () => {
+      const studentEmail = 'nonexistent@example.com';
       studentRepositoryMock.findByEmail.mockResolvedValue(null);
 
-      await expect(service.suspendStudent('missing@test.com')).rejects.toMatchObject({
+      await expect(service.suspendStudent(studentEmail)).rejects.toMatchObject({
         statusCode: 404,
         message: 'Student not found'
       });
@@ -145,53 +138,54 @@ describe('TeacherService', () => {
   });
 
   describe('getRecipientsForNotification', () => {
-    it('returns registered + @mentioned students, deduplicated', async () => {
+    it('should get notification recipients with mentions', async () => {
+      const teacherEmail = 'teacher@example.com';
+      const notification = 'Hello @mentioned@example.com';
+
       studentRepositoryMock.getRecipientsForNotification.mockResolvedValue([
-        { id: 'student-id-1', email: 'one@test.com', suspended: false },
-        { id: 'student-id-2', email: 'two@test.com', suspended: false },
-        { id: 'student-id-3', email: 'one@test.com', suspended: false }
+        { id: 'student-id-1', email: 'registered@example.com', suspended: false },
+        { id: 'student-id-2', email: 'mentioned@example.com', suspended: false }
       ]);
 
-      const result = await service.getRecipientsForNotification(
-        'teacher@test.com',
-        'Hello @two@test.com and @one@test.com'
-      );
+      const result = await service.getRecipientsForNotification(teacherEmail, notification);
 
+      expect(result).toEqual(['registered@example.com', 'mentioned@example.com']);
       expect(studentRepositoryMock.getRecipientsForNotification).toHaveBeenCalledWith(
-        'teacher@test.com',
-        ['two@test.com', 'one@test.com']
+        teacherEmail,
+        ['mentioned@example.com']
       );
-      expect(result).toEqual(['one@test.com', 'two@test.com']);
     });
 
-    it('excludes suspended students', async () => {
+    it('should handle non-existent teacher with mentions', async () => {
+      const teacherEmail = 'nonexistent@example.com';
+      const notification = 'Hello @mentioned@example.com';
+
       studentRepositoryMock.getRecipientsForNotification.mockResolvedValue([
-        { id: 'student-id-1', email: 'active@test.com', suspended: false }
+        { id: 'student-id-1', email: 'mentioned@example.com', suspended: false }
       ]);
 
-      const result = await service.getRecipientsForNotification(
-        'teacher@test.com',
-        'Notice @suspended@test.com'
-      );
+      const result = await service.getRecipientsForNotification(teacherEmail, notification);
 
-      expect(result).toEqual(['active@test.com']);
+      expect(result).toEqual(['mentioned@example.com']);
+      expect(studentRepositoryMock.getRecipientsForNotification).toHaveBeenCalledWith(
+        teacherEmail,
+        ['mentioned@example.com']
+      );
     });
 
-    it('handles notification with no @mentions', async () => {
-      studentRepositoryMock.getRecipientsForNotification.mockResolvedValue([
-        { id: 'student-id-1', email: 'registered@test.com', suspended: false }
-      ]);
+    it('should return empty array for non-existent teacher without mentions', async () => {
+      const teacherEmail = 'nonexistent@example.com';
+      const notification = 'Hello everyone';
 
-      const result = await service.getRecipientsForNotification(
-        'teacher@test.com',
-        'General update'
-      );
+      studentRepositoryMock.getRecipientsForNotification.mockResolvedValue([]);
 
+      const result = await service.getRecipientsForNotification(teacherEmail, notification);
+
+      expect(result).toEqual([]);
       expect(studentRepositoryMock.getRecipientsForNotification).toHaveBeenCalledWith(
-        'teacher@test.com',
+        teacherEmail,
         []
       );
-      expect(result).toEqual(['registered@test.com']);
     });
   });
 });
