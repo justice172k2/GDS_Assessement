@@ -1,4 +1,5 @@
 import { DataSource, EntityManager, In } from 'typeorm';
+import { Registration } from '../entities/Registration';
 import { Student } from '../entities/Student';
 import { Teacher } from '../entities/Teacher';
 import { IStudent, ITeacher } from '../types';
@@ -49,11 +50,11 @@ export class TeacherRepository {
       .select('s.id', 'id')
       .addSelect('s.email', 'email')
       .addSelect('s.suspended', 'suspended')
-      .from('registrations', 'r')
-      .innerJoin(Student, 's', 's.id = r.student_id')
-      .where('r.teacher_id IN (:...teacherIds)', { teacherIds })
+      .from(Registration, 'r')
+      .innerJoin(Student, 's', 's.id = r.studentId')
+      .where('r.teacherId IN (:...teacherIds)', { teacherIds })
       .groupBy('s.id')
-      .having('COUNT(DISTINCT r.teacher_id) = :teacherCount', { teacherCount: teacherIds.length })
+      .having('COUNT(DISTINCT r.teacherId) = :teacherCount', { teacherCount: teacherIds.length })
       .getRawMany<{ id: string; email: string; suspended: boolean | number | string }>();
 
     return rows.map((row) => ({
@@ -75,8 +76,8 @@ export class TeacherRepository {
     const queryBuilder = (manager ?? this.dataSource.manager).createQueryBuilder();
     await queryBuilder
       .insert()
-      .into('registrations')
-      .values(studentIds.map((studentId) => ({ teacher_id: teacherId, student_id: studentId })))
+      .into(Registration)
+      .values(studentIds.map((studentId) => ({ teacherId, studentId })))
       .orIgnore()
       .updateEntity(false)
       .execute();

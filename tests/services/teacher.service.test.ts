@@ -1,11 +1,13 @@
 import { StudentRepository } from '../../src/repositories/student.repository';
 import { TeacherRepository } from '../../src/repositories/teacher.repository';
+import { RegistrationRepository } from '../../src/repositories/registration.repository';
 import { TeacherService } from '../../src/services/teacher.service';
 import { IStudent } from '../../src/types';
 import { DataSource } from 'typeorm';
 
 jest.mock('../../src/repositories/teacher.repository');
 jest.mock('../../src/repositories/student.repository');
+jest.mock('../../src/repositories/registration.repository');
 
 describe('TeacherService', () => {
   let service: TeacherService;
@@ -26,6 +28,10 @@ describe('TeacherService', () => {
     getRecipientsForNotification: jest.fn()
   } as unknown as jest.Mocked<StudentRepository>;
 
+  const registrationRepositoryMock: jest.Mocked<RegistrationRepository> = {
+    linkStudents: jest.fn()
+  } as unknown as jest.Mocked<RegistrationRepository>;
+
   const queryRunnerMock = {
     connect: jest.fn(),
     startTransaction: jest.fn(),
@@ -41,7 +47,12 @@ describe('TeacherService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new TeacherService(dataSourceMock, teacherRepositoryMock, studentRepositoryMock);
+    service = new TeacherService(
+      dataSourceMock,
+      teacherRepositoryMock,
+      studentRepositoryMock,
+      registrationRepositoryMock
+    );
   });
 
   describe('register', () => {
@@ -56,12 +67,12 @@ describe('TeacherService', () => {
       });
       studentRepositoryMock.upsertMany.mockResolvedValue();
       studentRepositoryMock.findIdsByEmails.mockResolvedValue(['student-id-1', 'student-id-2']);
-      teacherRepositoryMock.linkStudents.mockResolvedValue();
+      registrationRepositoryMock.linkStudents.mockResolvedValue();
 
       await service.register(teacherEmail, studentEmails);
 
       expect(dataSourceMock.createQueryRunner).toHaveBeenCalledTimes(1);
-      expect(teacherRepositoryMock.linkStudents).toHaveBeenCalledWith(
+      expect(registrationRepositoryMock.linkStudents).toHaveBeenCalledWith(
         'teacher-id-1',
         ['student-id-1', 'student-id-2'],
         expect.anything()
@@ -80,12 +91,17 @@ describe('TeacherService', () => {
       });
       studentRepositoryMock.upsertMany.mockResolvedValue();
       studentRepositoryMock.findIdsByEmails.mockResolvedValue(['student-id-1']);
-      teacherRepositoryMock.linkStudents.mockResolvedValue();
+      registrationRepositoryMock.linkStudents.mockResolvedValue();
 
       await service.register(teacherEmail, studentEmails);
 
       expect(studentRepositoryMock.upsertMany).toHaveBeenCalledWith(
         ['student1@gmail.com'],
+        expect.anything()
+      );
+      expect(registrationRepositoryMock.linkStudents).toHaveBeenCalledWith(
+        'teacher-id-1',
+        ['student-id-1'],
         expect.anything()
       );
       expect(queryRunnerMock.commitTransaction).toHaveBeenCalledTimes(1);

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import path from 'path';
 import { DataSource } from 'typeorm';
+import { Registration } from '../entities/Registration';
 import { Student } from '../entities/Student';
 import { Teacher } from '../entities/Teacher';
 
@@ -17,7 +18,7 @@ export const dataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [Teacher, Student],
+  entities: [Teacher, Student, Registration],
   migrations: [path.join(__dirname, '../../migrations/*.{js,ts}')],
   synchronize: false,
   logging: false

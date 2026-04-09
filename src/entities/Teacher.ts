@@ -1,5 +1,5 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Student } from './Student';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Registration } from './Registration';
 
 @Entity('teachers')
 export class Teacher {
@@ -9,13 +9,8 @@ export class Teacher {
   @Column({ unique: true })
   email: string;
 
-  @ManyToMany(() => Student, (student) => student.teachers)
-  @JoinTable({
-    name: 'registrations',
-    joinColumn: { name: 'teacher_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'student_id', referencedColumnName: 'id' }
-  })
-  students: Student[];
+  @OneToMany(() => Registration, (registration) => registration.teacher)
+  registrations: Registration[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

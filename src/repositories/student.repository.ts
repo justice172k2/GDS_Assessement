@@ -1,4 +1,5 @@
 import { DataSource, EntityManager, In } from 'typeorm';
+import { Registration } from '../entities/Registration';
 import { Student } from '../entities/Student';
 import { Teacher } from '../entities/Teacher';
 import { IStudent } from '../types';
@@ -85,8 +86,8 @@ export class StudentRepository {
       .addSelect('s.email', 'email')
       .addSelect('s.suspended', 'suspended')
       .from(Student, 's')
-      .leftJoin('registrations', 'r', 'r.student_id = s.id')
-      .leftJoin(Teacher, 't', 't.id = r.teacher_id')
+      .leftJoin(Registration, 'r', 'r.studentId = s.id')
+      .leftJoin(Teacher, 't', 't.id = r.teacherId')
       .where('s.suspended = false')
       .andWhere(
         mentionedEmails.length > 0

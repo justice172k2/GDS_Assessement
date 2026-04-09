@@ -1,5 +1,5 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Teacher } from './Teacher';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Registration } from './Registration';
 
 @Entity('students')
 export class Student {
@@ -12,8 +12,8 @@ export class Student {
   @Column({ default: false })
   suspended: boolean;
 
-  @ManyToMany(() => Teacher, (teacher) => teacher.students)
-  teachers: Teacher[];
+  @OneToMany(() => Registration, (registration) => registration.student)
+  registrations: Registration[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

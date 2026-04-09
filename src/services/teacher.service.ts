@@ -1,4 +1,5 @@
 import { DataSource } from 'typeorm';
+import { RegistrationRepository } from '../repositories/registration.repository';
 import { StudentRepository } from '../repositories/student.repository';
 import { TeacherRepository } from '../repositories/teacher.repository';
 import { IStudent } from '../types';
@@ -9,7 +10,8 @@ export class TeacherService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly teacherRepository: TeacherRepository,
-    private readonly studentRepository: StudentRepository
+    private readonly studentRepository: StudentRepository,
+    private readonly registrationRepository: RegistrationRepository
   ) {}
 
   async register(teacherEmail: string, studentEmails: string[]): Promise<void> {
@@ -25,7 +27,7 @@ export class TeacherService {
       const teacher = await this.teacherRepository.findByEmail(teacherEmail, manager);
       if (!teacher) return;
       const studentIds = await this.studentRepository.findIdsByEmails(uniqueStudentEmails, manager);
-      await this.teacherRepository.linkStudents(teacher.id, studentIds, manager);
+      await this.registrationRepository.linkStudents(teacher.id, studentIds, manager);
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
